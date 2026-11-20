@@ -1,0 +1,6 @@
+docs/public/
+bin/
+.tmp/
+.task/
+coverage.out
+coverage.html

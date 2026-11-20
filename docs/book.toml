@@ -1,0 +1,29 @@
+[book]
+title = "weathercock-survey"
+authors = ["AtomicFS"]
+language = "en"
+
+[build]
+build-dir = "public"
+create-missing = false
+
+[output.html]
+mathjax-support = true
+no-section-label = true
+default-theme = "navy"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/AtomicFS/weathercock-survey"
+git-repository-icon = "fab-git"
+# icons: https://fontawesome.com/v4/icons/
+smart-punctuation = false
+admonitions = true
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
+
+[output.html.fold]
+enable = true
+level = 2
+
+[preprocessor]
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"

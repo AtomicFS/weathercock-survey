@@ -1,0 +1,54 @@
+# Example configuration file.
+# A relative path is relative to the directory of this file.
+# Version 0 uses only time_zone and form_files, and ignores the values of the other keys.
+
+# The time zone of all boundaries. Use a name from zone1970.tab, UTC, or an Etc zone.
+# Do not change it after the first start.
+time_zone: Europe/Prague
+
+# The form files. Version 0 accepts exactly one form file.
+form_files:
+  - forms/example.yaml
+
+# The list of employees. Version 0 does not accept this key.
+# employees_file: employees.yaml
+
+# The people with access to the server, the reverse proxy, the database, or the backups.
+# The limits page shows this list to each visitor.
+trusted_people:
+  - id: it-jane
+    name: Jane Doe
+    email: it@example.com
+    role: Server admin
+
+# Optional. A security.txt file (RFC 9116). The server serves it at /.well-known/security.txt.
+security_txt_file: security.txt
+
+# The host name of the server.
+host: survey.example.com
+
+# The identity provider. These values are for Google Workspace.
+oidc:
+  issuer_url: https://accounts.google.com
+  client_id: 1234567890-example.apps.googleusercontent.com
+  scopes:
+    - openid
+    - email
+  user_id_claim: sub
+  # Each ID token must contain these claims. For Google Workspace, set hd to the domain of the company.
+  # Without required claims and without a list of employees, each account of the provider can sign in.
+  required_claims:
+    hd: example.com
+
+# The address and port of the plain HTTP listener. Keep it on a loopback address.
+listen: 127.0.0.1:8080
+
+# The backups. The directory must be an absolute path.
+backup:
+  directory: /var/backups/weathercock-survey
+  keep: 3
+
+# A different path for a secret. The default is $CREDENTIALS_DIRECTORY/<name>.
+# Do not put a secret in this file.
+secret_files:
+  idp-client-secret: secrets/idp-client-secret

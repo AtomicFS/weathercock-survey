@@ -1,0 +1,6 @@
+# The shortest configuration file for development mode (serve --dev).
+# Development mode is not anonymous. Do not use it with real employees.
+
+time_zone: Europe/Prague
+form_files:
+  - forms/example.yaml

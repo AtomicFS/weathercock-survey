@@ -1,0 +1,27 @@
+# EditorConfig: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+charset = utf-8
+indent_style = tab
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,toml,js,mjs,css}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+indent_style = unset
+indent_size = unset
+
+# Vendored files: keep them as their upstream ships them
+[{web/static/pico.classless.min.css,docs/mermaid.min.js,docs/mermaid-init.js,LICENSE.txt}]
+indent_style = unset
+indent_size = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset

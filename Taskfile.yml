@@ -1,0 +1,150 @@
+---
+version: "3"
+
+vars:
+  VERSION:
+    sh: git describe --tags --always --dirty
+  # Pages link to the source code with an https:// URL. Converts the SSH forms
+  # "ssh://[user@]host[:port]/path.git" and "user@host:path.git" to "https://host/path".
+  # The task build:check-source-url rejects all other results.
+  SOURCE_URL:
+    sh: git remote get-url origin 2>/dev/null | sed -E 's#^ssh://([^@/]+@)?([^:/]+)(:[0-9]+)?/#https://\2/#; s#^[^@/:]+@([^:/]+):#https://\1/#; s#\.git$##'
+  BUILD_FLAGS: -trimpath -buildvcs=false
+  LDFLAGS: -s -w -X main.sourceURL={{.SOURCE_URL}}
+  BIN_NAME: weathercock-survey-{{OS}}-{{ARCH}}-v{{.VERSION}}
+
+tasks:
+  #========================
+  # Linting and formatting
+
+  lint:
+    desc: Run the linters (configuration in .golangci.yml)
+    cmds:
+      - editorconfig-checker
+      - golangci-lint run ./...
+
+  prettier:
+    desc: Run prettier on all YAML and JSON files
+    sources:
+      - ./**/*.yml
+      - ./**/*.yaml
+      - ./**/*.json
+    cmds:
+      - for: sources
+        cmd: prettier -w {{ .ITEM }}
+
+  format:
+    desc: Format the code with gofumpt (stricter fork of gofmt)
+    cmds:
+      - gofumpt -w .
+
+  #===============
+  # Documentation
+
+  docs:build:
+    desc: Build the mdBook documentation
+    dir: docs
+    cmds:
+      - mdbook build
+      - echo "In browser open file://$(pwd)/public/index.html"
+
+  docs:build-and-watch:
+    desc: Build mdbook and watch for changes
+    dir: docs
+    cmds:
+      - task: docs:build
+      - mdbook watch
+
+  #===============
+  # Project build
+
+  build:
+    desc: Build the reproducible server binary
+    deps: [build:generate, build:check-source-url]
+    # Go settings of the host, for example build tags, must not change the binary. The command removes
+    # GOFLAGS with "env -u", because an empty "GOFLAGS=" in the command does not replace the value of the shell.
+    cmds:
+      - mkdir -p bin
+      - env -u GOFLAGS CGO_ENABLED=0 GOENV=off go build {{.BUILD_FLAGS}} -ldflags="{{.LDFLAGS}}" -o bin/{{.BIN_NAME}} ./cmd/weathercock-survey
+      - ln -sf ./{{.BIN_NAME}} bin/weathercock-survey
+    sources:
+      - "**/*.go"
+      - web/**/*
+      - go.mod
+      - go.sum
+    generates:
+      - bin/{{.BIN_NAME}}
+
+  build:check-source-url:
+    internal: true
+    silent: true
+    # The URL goes in an environment variable, not in the shell code, so that quotes in it cannot run as code.
+    env:
+      SOURCE_URL: "{{.SOURCE_URL}}"
+    # A command, not a precondition: go-task skips the preconditions of a task without commands.
+    cmds:
+      # Only an https:// URL with a host and a path, with no user, password, token, port,
+      # query, or fragment. A secret in the remote URL must never get into the binary and the public pages.
+      # The error does not show the URL, because it can contain a secret. For the same
+      # reason, "silent" stops go-task from printing this command.
+      - |
+        if ! printf '%s\n' "$SOURCE_URL" | grep -Eq '^https://[A-Za-z0-9.-]+(/[A-Za-z0-9._~-]+)+$'; then
+          echo 'The git remote "origin" does not give a clean https:// URL for the source code link.' >&2
+          echo 'Set it with "git remote set-url origin <URL>", without a user name, password, token, or port.' >&2
+          exit 1
+        fi
+
+  build:generate:
+    desc: Generate the Go code of the templ templates
+    cmds:
+      - go tool templ generate
+    sources:
+      - "**/*.templ"
+    generates:
+      - "**/*_templ.go"
+
+  build:css-update:
+    desc: Download the latest classless Pico CSS to web/static/. Run "git diff" to see if the version changed
+    vars:
+      PICO_VERSION:
+        sh: curl -fsSL 'https://data.jsdelivr.com/v1/packages/npm/@picocss/pico/resolved?specifier=latest' | jq -er .version
+      PICO_URL: https://cdn.jsdelivr.net/npm/@picocss/pico@{{.PICO_VERSION}}/css/pico.classless.min.css
+    cmds:
+      - mkdir -p web/static
+      - curl -fsSL -o web/static/pico.classless.min.css '{{.PICO_URL}}'
+      - echo '{{.PICO_URL}}' > web/static/pico.classless.min.css.source
+
+  #=========
+  # Testing
+
+  check:
+    desc: Format the code, run the linters, and run the tests
+    cmds:
+      - task: format
+      - task: lint
+      - task: test
+
+  test:
+    desc: Run the tests
+    cmds:
+      - go test {{.CLI_ARGS}} -race -timeout 10m -shuffle=on ./...
+
+  test:coverage:
+    desc: Run the tests and write a coverage report (coverage.out, coverage.html)
+    cmds:
+      - go test {{.CLI_ARGS}} -race -timeout 10m -shuffle=on -covermode=atomic -coverprofile coverage.out ./...
+      - go tool cover -func=coverage.out
+      - go tool cover -html=coverage.out -o coverage.html
+
+  test:reproducible:
+    desc: Build the server two times with empty build caches, and compare the hashes
+    vars:
+      DIR: .tmp/reproducible
+    deps: [build:check-source-url]
+    cmds:
+      - rm -rf {{.DIR}}
+      - mkdir -p {{.DIR}}
+      - for: [a, b]
+        cmd: env -u GOFLAGS GOCACHE="$(pwd)/{{.DIR}}/cache-{{.ITEM}}" CGO_ENABLED=0 GOENV=off go build {{.BUILD_FLAGS}} -ldflags="{{.LDFLAGS}}" -o {{.DIR}}/{{.ITEM}} ./cmd/weathercock-survey
+      - cmp {{.DIR}}/a {{.DIR}}/b
+      - sha256sum {{.DIR}}/a
