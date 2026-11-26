@@ -8,6 +8,10 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - Tests: a `wantErr error` field and `assert.ErrorIs`. `assert.NotNil` is fine where any error is the right answer.
 - `summed` surveys take `text` answers too (sorted alphabetically, deleted below k).
 - `entries` forms wait until later. Keep the door open with a form type field, no code for it now.
+- Each period has a snapshot of its settings and form in the database; config changes apply only to later periods. This stops changes to an open period.
+- Database file permissions wider than 0600: fix them and log a warning, do not refuse to start.
+- `govulncheck` needs the network, so it runs in its own task and in CI, not in `go-task check`.
+- No receipts for employees: a receipt lets a manager demand proof of an answer.
 - No ADRs and no long specification. `PRINCIPLES.md`, `WISHLIST.md`, and this file replace them. The mdBook setup stays for future documentation.
 
 ## Parked

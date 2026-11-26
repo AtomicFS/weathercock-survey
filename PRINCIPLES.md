@@ -36,6 +36,8 @@ Each rule exists to stop a link between a person and an answer. Follow the inten
 Known gaps, told to employees on the limits page:
 
 - The admin is trusted.
+- The admin can forge submissions and change the counts of an open period. A change to the published results shows only to a person who kept an earlier results hash.
+- The writing style of a text answer can identify a person.
 - While a period is open, the database records who submitted. A person who reads the database then, with only 1 or 2 submissions, can link them to their answers.
 - The eligible count (from the list of employees) makes the group known: "17 of 18" tells colleagues that one person did not submit. This is a deliberate trade-off for transparency.
 
