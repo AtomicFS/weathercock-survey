@@ -3,6 +3,9 @@
 package period
 
 import (
+	"errors"
+	"io/fs"
+	"os"
 	"testing"
 	"time"
 
@@ -288,4 +291,121 @@ func TestMidnight(t *testing.T) {
 			assert.True(t, tc.want.Equal(got), "want %s, got %s", tc.want, got.UTC())
 		})
 	}
+}
+
+// TestAllZones checks midnight and At in each time zone of the host, at each
+// zone change from 1850 to 2060. Away from a zone change, time.Date is exact,
+// so the zone changes hold all the hard cases.
+func TestAllZones(t *testing.T) {
+	if testing.Short() {
+		t.Skip("slow: walks each zone change of each time zone")
+	}
+	zones := hostZones(t)
+	if len(zones) == 0 {
+		t.Skip("no time zone data in " + zoneDir)
+	}
+	day := 24 * time.Hour
+	for _, name := range zones {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			location := loadZone(t, name)
+			weekly, err := New(Week, 1, "1850-01-07", location)
+			require.NoError(t, err)
+			monthly, err := New(Month, 1, "1850-01-01", location)
+			require.NoError(t, err)
+			change := time.Date(1850, 1, 10, 0, 0, 0, 0, location)
+			for {
+				change = nextZone(change)
+				if change.IsZero() || change.Year() > 2060 {
+					return
+				}
+				for _, at := range []time.Time{change.Add(-time.Nanosecond), change} {
+					date := localDate(at, location)
+					for _, d := range []time.Time{date.Add(-day), date, date.Add(day)} {
+						want := firstAtLeast(d, location)
+						got := midnight(d, location)
+						if !assert.True(t, want.Equal(got), "midnight of %s: want %s, got %s", d.Format(time.DateOnly), want.UTC(), got.UTC()) {
+							return
+						}
+					}
+					for _, cycle := range []Cycle{weekly, monthly} {
+						p, ok := cycle.At(at)
+						if !assert.True(t, ok && !at.Before(p.Start) && at.Before(p.End), "At(%s) gives %+v", at.UTC(), p) {
+							return
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+// zoneDir holds the time zone data of the host. The server uses it too. If
+// ZONEINFO is set, time.LoadLocation reads the zones from there instead.
+const zoneDir = "/usr/share/zoneinfo"
+
+// hostZones returns the names of the time zones in zoneDir.
+func hostZones(t *testing.T) []string {
+	t.Helper()
+	var zones []string
+	err := fs.WalkDir(os.DirFS(zoneDir), ".", func(path string, entry fs.DirEntry, err error) error {
+		switch {
+		case err != nil:
+			return err
+		case entry.IsDir() && (path == "posix" || path == "right"):
+			// Copies of the other zones.
+			return fs.SkipDir
+		case entry.IsDir():
+			return nil
+		}
+		// Other files, for example zone.tab, are not zones.
+		if _, err := time.LoadLocation(path); err == nil {
+			zones = append(zones, path)
+		}
+		return nil
+	})
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	require.NoError(t, err)
+	return zones
+}
+
+// firstAtLeast is the definition of midnight: the first instant whose local
+// date is the date or later. It walks the zones of the location one by one.
+func firstAtLeast(date time.Time, location *time.Location) time.Time {
+	// No offset is 2 days, so the walk starts before the date.
+	t := date.Add(-2 * 24 * time.Hour).In(location)
+	for {
+		if !localDate(t, location).Before(date) {
+			return t
+		}
+		_, offset := t.Zone()
+		candidate := date.Add(-time.Duration(offset) * time.Second)
+		end := nextZone(t)
+		if end.IsZero() || candidate.Before(end) {
+			return candidate
+		}
+		t = end
+	}
+}
+
+// nextZone returns the start of the zone after the zone of t, or the zero
+// Time if no zone follows. After the last change in the data, Go computes the
+// zones from a rule, and away from a change it gives the year as the bounds.
+// In a leap year that "year" ends on 31 December, and ZoneBounds at that
+// instant returns the instant itself as the end (time/zoneinfo.go, tzset).
+// The zone then lasts up to the start of the next UTC year.
+func nextZone(t time.Time) time.Time {
+	_, end := t.ZoneBounds()
+	if !end.IsZero() && !end.After(t) {
+		return time.Date(t.UTC().Year()+1, 1, 1, 0, 0, 0, 0, time.UTC).In(t.Location())
+	}
+	return end
+}
+
+// localDate returns the local date of t, as midnight UTC.
+func localDate(t time.Time, location *time.Location) time.Time {
+	year, month, day := t.In(location).Date()
+	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
 }
