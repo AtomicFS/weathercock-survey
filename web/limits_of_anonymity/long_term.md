@@ -14,22 +14,27 @@ You must trust the server admin. The admin can link you to your answers:
 - The admin can change the code that the server sends to your browser.
 - The admin can sign your token with a key that only you get, and then identify you by the key.
 - The admin holds the signing key, so the admin can add forged answers. See [Summed results](#summed-results).
+- If the list of employees holds shared or extra accounts, one person can submit more than once, and lift a period above k.
 
 On the server, the end of this page lists the trusted people: the admin, and each other person or company with access to the server, the reverse proxy, the database, or the backups.
 The admin writes this list. The service cannot check that it is complete or correct.
+A person who is removed from the list can keep copies of the data that they had access to.
 
 ## The database before the planned end
 
 - Until the planned end of a period, the database records who got a token for a form with one submission in each period.
   If the server is stopped at the planned end, the server deletes this record at its next start.
 - If only 1 or 2 people got a token and submitted, a person who reads the database before the planned end can link them to their answers.
+- A person with a copy of the database from an open period, for example a backup of the whole server, can compare it with another copy or with the published results.
+  If only one person got a token and submitted between the two, the difference is that person's answers.
 - A person with a copy of the database made before the planned end can add forged answers to that period.
 
 ## Backups
 
 - The server makes a backup only after the end of a period.
   A backup does not record who got a token, and contains no data of a period that did not end.
-- If the server loses its data before the end of a period, your submission is lost. Keep your own copy of your answers, and submit them again.
+- After you submit, the server does not let you read or change your answers.
+- If the server loses its data before the end of a period, your submission is lost. If the period is still open, you can submit again.
 - Deleted submissions can stay in backups until the server or the admin deletes the backups.
 
 ## The identity provider
@@ -89,7 +94,7 @@ This can show more than the counts alone:
 - The eligible counts over the periods show when people joined or left.
 - The eligible count is the highest number of people on the list during the period. A person who left early counts for the whole period.
 
-Some forms do not publish the eligible count. Without a list of employees, the server shows no eligible count.
+Some forms do not publish the eligible count.
 
 ## Your device
 

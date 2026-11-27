@@ -12,12 +12,21 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - Database file permissions wider than 0600: fix them and log a warning, do not refuse to start.
 - `govulncheck` needs the network, so it runs in its own task and in CI, not in `go-task check`.
 - No receipts for employees: a receipt lets a manager demand proof of an answer.
+- Choice questions are required, with a "prefer not to answer" option and nothing selected by default; text questions are optional. This makes the `n` check exact.
+- The list of employees is required outside development mode: without it, extra accounts lift a period above k. Publishing the eligible count stays optional.
+- No `/version` file hashes: the server reports its own hashes, so they prove nothing. No trusted-people dates.
+- Never tell employees to save a copy of their answers (a copy on a monitored laptop links them). State the facts; the employee decides.
+- A raised k does not apply to an open period: the admin could use it to delete the answers of that period.
+- Below k, delete all data of the period, `n` included; keep only a record that the period ended with fewer than k submissions.
+- Ideas from the old `shitshow` branch were reviewed on 2026-11-27; the rejected ones: single-instance `flock`, dev mode stored in the database, file-mode checks for all files, four-attacker table.
 - No ADRs and no long specification. `PRINCIPLES.md`, `WISHLIST.md`, and this file replace them. The mdBook setup stays for future documentation.
 
 ## Parked
 
 - Code comments still say "the specification" (`internal/timezone/check.go`, `names.go`, `main_test.go`). Fix them in the lean audit.
 - The form file loader must not open the file two times (`config.Load` checks it, then the loader opens it again).
+- `CONVENTIONS.md` names `a-h/templ` for templates, but `TODO.md` says `html/template`. Decide one.
+- Planned ends at start run before the config is read, so the database path must not come from the config file. Today `main.go` and `internal/timezone/check.go` assume a stored time zone; a fixed UTC planned end makes it unneeded.
 
 ## State
 

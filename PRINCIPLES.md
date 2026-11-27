@@ -36,9 +36,10 @@ Each rule exists to stop a link between a person and an answer. Follow the inten
 Known gaps, told to employees on the limits page:
 
 - The admin is trusted.
-- The admin can forge submissions and change the counts of an open period. A change to the published results shows only to a person who kept an earlier results hash.
+- The admin can forge submissions and change the counts of an open period. Forged submissions can lift a period above k, so the results show the real answers of fewer than k employees. A change to the published results shows only to a person who kept an earlier results hash.
+- If the list of employees holds shared or extra accounts, one person can submit more than once, and lift a period above k.
 - The writing style of a text answer can identify a person.
-- While a period is open, the database records who submitted. A person who reads the database then, with only 1 or 2 submissions, can link them to their answers.
+- While a period is open, the database records who submitted. A person who reads the database then can link people to their answers: with only 1 or 2 submissions, or with a copy of the database (for example a host backup) compared with another copy or with the published results, if only one submission is between them.
 - The eligible count (from the list of employees) makes the group known: "17 of 18" tells colleagues that one person did not submit. This is a deliberate trade-off for transparency.
 
 The long-term token protocol stops the server from linking an account to its answers, but employees still trust the admin for the code that the server runs, and against forged submissions.

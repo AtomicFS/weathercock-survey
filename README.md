@@ -22,9 +22,9 @@ Image source: [Wikimedia Commons](https://en.wikipedia.org/wiki/Weather_vane#/me
 
 Transparency is a requirement, not an extra:
 
-- License `AGPL-3.0-or-later`. Each page links to the source code of the running version.
-  `/version` shows the SHA-256 hash of each embedded file. The build is reproducible.
-- A public list of trusted people: each person or company with access to the server, the reverse proxy, the database, or the backups, with the date when the admin added them.
+- License `AGPL-3.0-or-later`. The footer of each page shows the license, the server version, and a link to the source code of the running version.
+  The build is reproducible.
+- A public list of trusted people: each person or company with access to the server, the reverse proxy, the database, or the backups.
 - A public "Limits of anonymity" page. It tells employees in plain words what the service does not protect them from.
 - Clear warnings before an employee answers, for example "You must trust the admin" and "Your writing style can identify you".
 - Public results. Each employee can read them.

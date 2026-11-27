@@ -15,17 +15,19 @@ What the project should become, one line per feature. `PRINCIPLES.md` decides ho
 
 ## Should have: first production version
 
-- Sign-in with the company SSO (OpenID Connect, for example Google), with required claims such as the company domain.
-- Optional list of employees. It gives the eligible count and the participation rate of each period.
+- Sign-in with the company SSO (OpenID Connect, for example Google), with required claims such as the company domain. Keep only the user ID; drop the ID token and the access token after sign-in.
+- List of employees, required outside development mode: without it, one person with extra accounts can lift a period above k. It gives the eligible count and the participation rate of each period. Open question: a check "`n` is at most the eligible count" fails when people join or leave during a period.
+- A separate admin tool that builds the list of employees from the SSO directory, and warns about shared accounts. It runs on the admin's PC, never in the server.
 - Several forms
 - Submission window (the first N days of a period)
 - Optional end date of a form (to prevent form from opening new period)
 - Form changes between periods
-- Automatic backups after each planned end, sanitized and stripped of open periods.
+- Automatic backups after each planned end, sanitized and stripped of open periods: copy only the allowed rows into a new file (`ATTACH`, `INSERT ... SELECT`), `fsync`, rename. Never copy all and delete after, so no file with user IDs exists.
 - CSV export of the results, with protection against spreadsheet formulas.
 - Charts as server-side SVG, and a trend over the periods.
-- Limits page lists the trusted people (who can access the server and the data, for example admins); `security.txt`.
-- Operations: run behind a TLS reverse proxy, `systemd` unit, a `validate` command, `/version`, reproducible build.
+- Limits page lists the trusted people (who can access the server and the data, for example admins); outside development mode, refuse to start with an empty list; `security.txt`.
+- Operations: run behind a TLS reverse proxy, `systemd` unit (`UMask=0077`, `StateDirectoryMode=0700`, `RestartPreventExitStatus=2`), a `validate` command, `/version`, reproducible build.
+- Operations docs: leave the state directory out of host backups and snapshots (a copy of an open period, compared with another copy or with the results, can link people); turn off the access log of the proxy; never give each employee an own account at the proxy.
 - Pages without JavaScript, with a strict Content Security Policy.
 - Question order: `random` or `file` (random order removes order bias, but sometimes order matters)
 
@@ -47,7 +49,6 @@ What the project should become, one line per feature. `PRINCIPLES.md` decides ho
 - Each text field had "Copy to clipboard" button.
 - Button to "Delete all drafts".
 - A cache of published results (closed periods with at least k submissions), never of data of an open period.
-- A separate admin tool that builds the list of employees from the SSO directory. It runs on the admin's PC, never in the server.
 
 
 ## Open questions
