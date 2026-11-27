@@ -26,6 +26,7 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - A raised k does not apply to an open period: the admin could use it to delete the answers of that period.
 - Below k, delete all data of the period, `n` included; keep only a record that the period ended with fewer than k submissions.
 - Ideas from the old `shitshow` branch were reviewed on 2026-11-27; the rejected ones: single-instance `flock`, dev mode stored in the database, file-mode checks for all files, four-attacker table.
+- 360-degree feedback lives in `IDEA_INCUBATOR.md`, not `WISHLIST.md`: it can harm people and needs a harm review before any build.
 - Templates: `html/template`, not `templ`. About four pages and no JavaScript: no code generator and 14 fewer indirect modules outweigh compile-time types. Tests of each page state make up for the weak typing.
 - No ADRs and no long specification. `PRINCIPLES.md`, `WISHLIST.md`, and this file replace them. The mdBook setup stays for future documentation.
 
