@@ -39,13 +39,18 @@ Ask the maintainer before you add a dependency that is not in this list.
 - `modernc.org/sqlite`: the database.
 - `coreos/go-oidc`, `golang.org/x/oauth2`: the sign-in.
 - `cloudflare/circl`: the token protocol (later).
-- `a-h/templ`: HTML templates. `yuin/goldmark`: build time only, for the limits page.
+- `yuin/goldmark`: build time only, for the limits page.
 - `stretchr/testify`, `google/go-cmp`: tests.
 - Pico CSS, classless version: `web/static/pico.classless.min.css`.
 
 ## Web pages
 
-- No JavaScript for now. Render HTML on the server with `templ`. Embed all templates and static files with `embed`.
+- No JavaScript for now. Render HTML on the server with `html/template`. Embed all templates and static files with `embed`.
+- Parse all templates at start, and refuse to start on an error. Build one template set for each page: clone the layout, then parse the page. One set for all pages lets a later `{{define}}` replace an earlier one without an error.
+- Set `Option("missingkey=error")`. Give each page its own view struct, never a map.
+- Render into a buffer, then write the status and the body. Otherwise an error halfway through sends half a page with status 200.
+- Test each page state that changes a branch, for example signed in or not, and below k or not. A template finds a wrong field name only in a branch that runs.
+- Use `template.HTML` only for the limits page that `goldmark` makes at build time. Never make it from configuration or input: it skips the escaping.
 
 ## Documentation
 

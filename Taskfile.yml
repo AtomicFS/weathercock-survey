@@ -60,7 +60,7 @@ tasks:
 
   build:
     desc: Build the reproducible server binary
-    deps: [build:generate, build:check-source-url]
+    deps: [build:check-source-url]
     # Go settings of the host, for example build tags, must not change the binary. The command removes
     # GOFLAGS with "env -u", because an empty "GOFLAGS=" in the command does not replace the value of the shell.
     cmds:
@@ -93,15 +93,6 @@ tasks:
           echo 'Set it with "git remote set-url origin <URL>", without a user name, password, token, or port.' >&2
           exit 1
         fi
-
-  build:generate:
-    desc: Generate the Go code of the templ templates
-    cmds:
-      - go tool templ generate
-    sources:
-      - "**/*.templ"
-    generates:
-      - "**/*_templ.go"
 
   build:css-update:
     desc: Download the latest classless Pico CSS to web/static/. Run "git diff" to see if the version changed
