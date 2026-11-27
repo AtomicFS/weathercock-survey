@@ -83,19 +83,36 @@ func New(unit Unit, every int, anchor string, location *time.Location) (Cycle, e
 // At returns the period that holds t. It returns false if t is before the
 // anchor: no period exists then.
 func (c Cycle) At(t time.Time) (Period, bool) {
+	if t.Before(midnight(c.anchor, c.location)) {
+		return Period{}, false
+	}
+	// Clocks that go back across midnight can show the day before after the
+	// start of a period. So the local date can point to an earlier period
+	// than t: the loop moves on until t is before the end.
 	year, month, day := t.In(c.location).Date()
 	date := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
 	if date.Before(c.anchor) {
-		return Period{}, false
+		date = c.anchor
 	}
 	index := c.unit.between(c.anchor, c.unit.start(date)) / c.every
+	for {
+		period := c.period(index)
+		if t.Before(period.End) {
+			return period, true
+		}
+		index++
+	}
+}
+
+// period returns the period with the index; the first period has index 0.
+func (c Cycle) period(index int) Period {
 	start := c.unit.add(c.anchor, index*c.every)
 	end := c.unit.add(c.anchor, (index+1)*c.every)
 	return Period{
 		Name:  c.unit.name(start),
 		Start: midnight(start, c.location).UTC(),
 		End:   midnight(end, c.location).UTC(),
-	}, true
+	}
 }
 
 // midnight returns the first instant of the date in the location. If a

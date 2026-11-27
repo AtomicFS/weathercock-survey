@@ -111,14 +111,16 @@ func TestAt(t *testing.T) {
 	utc := func(year int, month time.Month, day, hour int) time.Time {
 		return time.Date(year, month, day, hour, 0, 0, 0, time.UTC)
 	}
+	stJohns := loadZone(t, "America/St_Johns")
 	testCases := []struct {
-		name   string
-		unit   Unit
-		every  int
-		anchor string
-		at     time.Time
-		want   Period
-		wantOK bool
+		name     string
+		unit     Unit
+		every    int
+		anchor   string
+		location *time.Location // Prague if nil.
+		at       time.Time
+		want     Period
+		wantOK   bool
 	}{
 		// Pass
 		{
@@ -176,6 +178,28 @@ func TestAt(t *testing.T) {
 			at:   utc(2024, 12, 31, 23),
 			want: Period{Name: "2025-01", Start: utc(2024, 12, 31, 23), End: utc(2025, 1, 31, 23)}, wantOK: true,
 		},
+		{
+			// At 00:01 local time the clocks went back to 23:01 of the day
+			// before, after the first midnight.
+			name: "local date goes back after the start", unit: Month, every: 1, anchor: "2009-10-01", location: stJohns,
+			at: time.Date(2009, 11, 1, 2, 45, 0, 0, time.UTC),
+			want: Period{
+				Name:  "2009-11",
+				Start: time.Date(2009, 11, 1, 2, 30, 0, 0, time.UTC),
+				End:   time.Date(2009, 12, 1, 3, 30, 0, 0, time.UTC),
+			},
+			wantOK: true,
+		},
+		{
+			name: "local date goes back after the anchor", unit: Month, every: 1, anchor: "2009-11-01", location: stJohns,
+			at: time.Date(2009, 11, 1, 2, 45, 0, 0, time.UTC),
+			want: Period{
+				Name:  "2009-11",
+				Start: time.Date(2009, 11, 1, 2, 30, 0, 0, time.UTC),
+				End:   time.Date(2009, 12, 1, 3, 30, 0, 0, time.UTC),
+			},
+			wantOK: true,
+		},
 
 		// Fail
 		{
@@ -185,13 +209,19 @@ func TestAt(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cycle, err := New(tc.unit, tc.every, tc.anchor, prague)
+			location := tc.location
+			if location == nil {
+				location = prague
+			}
+			cycle, err := New(tc.unit, tc.every, tc.anchor, location)
 			require.NoError(t, err)
 			got, ok := cycle.At(tc.at)
 			require.Equal(t, tc.wantOK, ok)
 			if !ok {
 				return
 			}
+			assert.False(t, tc.at.Before(got.Start))
+			assert.True(t, tc.at.Before(got.End))
 			assert.Empty(t, cmp.Diff(tc.want, got))
 			assert.Equal(t, time.UTC, got.Start.Location())
 			assert.Equal(t, time.UTC, got.End.Location())
