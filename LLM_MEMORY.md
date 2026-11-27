@@ -33,12 +33,14 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - Ideas from the old `shitshow` branch were reviewed on 2026-11-27; the rejected ones: single-instance `flock`, dev mode stored in the database, file-mode checks for all files, four-attacker table.
 - 360-degree feedback lives in `IDEA_INCUBATOR.md`, not `WISHLIST.md`: it can harm people and needs a harm review before any build.
 - Templates: `html/template`, not `templ`. About four pages and no JavaScript: no code generator and 14 fewer indirect modules outweigh compile-time types. Tests of each page state make up for the weak typing.
+- Periods (`internal/period`): `Unit` is a `uint8` enum with an invalid zero value and only `String` and `UnmarshalText`; `Cycle` has unexported fields and only `New` makes one; the anchor must be the start of a unit, and the error suggests the unit start before and the one after; `every` is 1..100; no period before the anchor; `period` does not import YAML, so the form loader calls `period.New`.
 - No ADRs and no long specification. `PRINCIPLES.md`, `WISHLIST.md`, and this file replace them. The mdBook setup stays for future documentation.
 
 ## Parked
 
 - Snapshot task: `form.Int` has no marshaler, and a loaded `Form` holds `_no_answer`, which `check` refuses. Store the raw form file bytes in the snapshot and split `form.Load` into a `Parse(data, name)`, so a snapshot loads through the same checks.
 - Planned ends at start run before the config is read, so the database path must not come from the config file.
+- Storage task: period names are unique in one cycle, but not after a change of the cycle (`every: 1` to `3` makes "2027-05" mean May, then May to July). Do not key stored periods by name alone; use the snapshot's start and end too.
 - Submission task: the `http.MaxBytesReader` cap must come from the form's text limits (form encoding can send about 12 bytes per character), not a fixed constant, or a valid long answer gets cut and cannot be refilled.
 
 ## State
@@ -51,4 +53,5 @@ Facts for the next session:
 - Kong exits with 80 on its own usage errors; `run` handles parse errors itself (exit 2) and catches the exit after `--help` (exit 0).
 - go-yaml v4: `yaml.Load` refuses an empty file and a second document; unknown keys need `WithKnownFields()`. Errors are `*yaml.LoadErrors`; `errors.As` to `*yaml.LoadError` works. Library error text can hold values.
 - Go reads `ZONEINFO` once per process. The `go test` binary has a Go root fallback for tzdata, so `time.LoadLocation` works in tests without host tzdata.
+- `time.Date` in a gap or at a doubled midnight picks the earlier zone west of UTC and the later zone east of UTC. Test both sides: Havana/Santiago and Beirut 2025-03-30/Amman 2021-10-29.
 - `serve --dev` returns at once until the HTTP server exists; then `TestRun` must change.

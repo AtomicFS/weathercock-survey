@@ -6,7 +6,6 @@ The maintainer owns this file. Agents propose changes in their reports.
 
 ## Next: the prototype (must have, see `WISHLIST.md`)
 
-- [ ] Periods: every N `week`, `month`, `quarter`, or `year` from an anchor date, in the configured time zone; stable period names; store each planned end as a fixed UTC time; if local midnight does not exist on a day (daylight saving), the boundary is the first valid local time; if it occurs two times, the first one
 - [ ] Storage: SQLite with choice counters and text answers; no link to the person, no link between answers, no time, no insert order; create all choice counters at 0 when a period opens, so that a new row cannot show a choice; `WITHOUT ROWID` tables with random keys from `crypto/rand`; test: two orders of the same submissions give the same rows, without the random keys; `UNIQUE(user, period)` on the record of who submitted; the record and the counters change in one transaction (`BEGIN IMMEDIATE`) that checks inside that the period is still open; triggers refuse `INSERT` and `UPDATE` in a closed period, and refuse a change from closed to open
 - [ ] Database file: `umask 077` at start; if the file permissions are wider than 0600, fix them and log a warning
 - [ ] Period snapshot: copy the period settings and the form into the database when a period opens; config changes apply only to later periods
@@ -23,6 +22,7 @@ The maintainer owns this file. Agents propose changes in their reports.
 
 ## Done
 
+- [x] Periods: every N `week`, `month`, `quarter`, or `year` from an anchor date, in the configured time zone; stable period names; store each planned end as a fixed UTC time; if local midnight does not exist on a day (daylight saving), the boundary is the first valid local time; if it occurs two times, the first one
 - [x] Form file: one `summed` form with `scale`, `single`, `multi`, and `text` questions; stable IDs for questions and options; k of at least 3; each `single`, `scale`, and `multi` question is required and gets a "prefer not to answer" option (`include_no_answer`, default true); `text` questions are optional; text limits; refuse to start, with the path, if the form file does not open
 - [x] Lean audit of the existing code: errors in the firmware-action style (sentinels, `suggestion` in the log, `errors.Join`), and a smaller YAML loader
 - [x] Configuration file: `--config`, `yaml.Load` with known fields, `time_zone` and `form_files`
