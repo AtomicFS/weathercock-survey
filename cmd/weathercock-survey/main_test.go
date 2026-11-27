@@ -23,10 +23,15 @@ import (
 	"github.com/AtomicFS/weathercock-survey/internal/timezone"
 )
 
-// writeConfig writes a configuration file with content, and returns its path.
+// writeConfig writes a configuration file with content, and a copy of the
+// example form as form.yaml next to it. It returns the path of the configuration file.
 func writeConfig(t *testing.T, content string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "config.yaml")
+	dir := t.TempDir()
+	example, err := os.ReadFile(filepath.Join("..", "..", "examples", "forms", "example.yaml"))
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "form.yaml"), example, 0o600)) //nolint:gosec // G703: a fixed name in t.TempDir.
+	path := filepath.Join(dir, "config.yaml")
 	require.NoError(t, os.WriteFile(path, []byte(content), 0o600))
 	return path
 }
@@ -76,6 +81,7 @@ func TestServe(t *testing.T) {
 	valid := writeConfig(t, validConfig)
 	unknownZone := writeConfig(t, "time_zone: Nowhere/City\nform_files: [form.yaml]\n")
 	missing := filepath.Join(t.TempDir(), "config.yaml")
+	missingForm := writeConfig(t, "time_zone: UTC\nform_files: [missing.yaml]\n")
 
 	testCases := []struct {
 		name    string
@@ -90,6 +96,7 @@ func TestServe(t *testing.T) {
 		{name: "empty configuration path", cmd: serveDev(""), wantErr: errEmptyConfig},
 		{name: "missing configuration file", cmd: serveDev(missing), wantErr: fs.ErrNotExist},
 		{name: "unknown time zone", cmd: serveDev(unknownZone), wantErr: timezone.ErrUnknownZone},
+		{name: "missing form file", cmd: serveDev(missingForm), wantErr: fs.ErrNotExist},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

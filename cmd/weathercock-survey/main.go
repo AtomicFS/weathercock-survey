@@ -14,6 +14,7 @@ import (
 	"github.com/alecthomas/kong"
 
 	"github.com/AtomicFS/weathercock-survey/internal/config"
+	"github.com/AtomicFS/weathercock-survey/internal/form"
 	"github.com/AtomicFS/weathercock-survey/internal/logging"
 	"github.com/AtomicFS/weathercock-survey/internal/suggest"
 	"github.com/AtomicFS/weathercock-survey/internal/timezone"
@@ -69,7 +70,11 @@ func (c *serveCmd) Run(logger *slog.Logger) error {
 	for _, warning := range timezone.EnvWarnings(os.Getenv) {
 		logger.Warn(warning.Message, slog.String("suggestion", warning.Suggestion))
 	}
-	_, err := c.load()
+	cfg, err := c.load()
+	if err != nil {
+		return err
+	}
+	_, err = form.Load(cfg.FormFiles[0])
 	return err
 }
 

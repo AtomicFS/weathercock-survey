@@ -4,6 +4,7 @@ The agent owns this file. See the global agent instructions, section "Memory".
 
 ## Settled
 
+- When a task is done, the agent moves its `TODO.md` item to "Done" itself, in the task's commit. Other `TODO.md` changes are still proposals.
 - Errors follow the firmware-action style: package-level sentinel errors with short text, the fix in a `suggestion` attribute of the log line, `errors.Join` to report all problems at once.
 - The fix travels with the error (`suggest.Wrap`); only `main` logs, one line per joined problem. Packages do not log errors.
 - Paths and OS error text may appear in errors (`PRINCIPLES.md` allows them); wrap with `%w`.
@@ -19,7 +20,11 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - Database file permissions wider than 0600: fix them and log a warning, do not refuse to start.
 - `govulncheck` needs the network, so it runs in its own task and in CI, not in `go-task check`.
 - No receipts for employees: a receipt lets a manager demand proof of an answer.
-- Choice questions are required, with a "prefer not to answer" option and nothing selected by default; text questions are optional. This makes the `n` check exact.
+- Choice questions are required, with nothing selected by default; text questions are optional. This makes the `n` check exact.
+- "Prefer not to answer": `form.Load` appends option `_no_answer` last to each choice question, unless `include_no_answer: false` (default true; the maintainer wants the option). Server-made IDs start with `_`, which the ID pattern refuses, so they never collide with admin IDs. In `multi`, `_no_answer` must be the only selected option.
+- Form schema: uniform `options` lists; scale options carry a `value` (unique, any order, may be negative). `text_limit` on the form (default) and on text questions (override), each 1..65000 (`form.MaxTextLimit`); `Load` stores the final limit on each text question.
+- Form integers use `form.Int`: plain decimal only (go-yaml reads `010` as 8, and reads `0x10`, `1_0`), and it tells a missing key from 0.
+- Choice questions need at least 2 admin-written options; a form needs at least one question.
 - The list of employees is required outside development mode: without it, extra accounts lift a period above k. Publishing the eligible count stays optional.
 - No `/version` file hashes: the server reports its own hashes, so they prove nothing. No trusted-people dates.
 - Never tell employees to save a copy of their answers (a copy on a monitored laptop links them). State the facts; the employee decides.
@@ -32,8 +37,9 @@ The agent owns this file. See the global agent instructions, section "Memory".
 
 ## Parked
 
+- Snapshot task: `form.Int` has no marshaler, and a loaded `Form` holds `_no_answer`, which `check` refuses. Store the raw form file bytes in the snapshot and split `form.Load` into a `Parse(data, name)`, so a snapshot loads through the same checks.
 - Planned ends at start run before the config is read, so the database path must not come from the config file.
-- go-yaml v4: check whether `Load` still reads `012` as octal before the form file gets `k`.
+- Submission task: the `http.MaxBytesReader` cap must come from the form's text limits (form encoding can send about 12 bytes per character), not a fixed constant, or a valid long answer gets cut and cannot be refilled.
 
 ## State
 

@@ -1,1 +1,42 @@
-# Placeholder. The form file task replaces this file with an example form.
+# Example form file.
+# Each question and option ID is stable: the database and the results use it.
+# The server adds a "Prefer not to answer" option to each scale, single, and multi question.
+
+type: summed
+title: Monthly pulse
+# The smallest number of submissions to publish the results of a period. At least 3.
+k: 3
+# Optional. The default limit of characters for text answers, at most 65000.
+text_limit: 2000
+questions:
+  - id: workload
+    type: scale
+    text: How is your workload?
+    options:
+      - { id: too_low, text: Too low, value: -2 }
+      - { id: low, text: Low, value: -1 }
+      - { id: ok, text: OK, value: 0 }
+      - { id: high, text: High, value: 1 }
+      - { id: too_high, text: Too high, value: 2 }
+  - id: team
+    type: single
+    text: Which team are you in?
+    # Optional. Set to false to remove "Prefer not to answer". The default is true.
+    include_no_answer: true
+    options:
+      - { id: dev, text: Development }
+      - { id: ops, text: Operations }
+  - id: tools
+    type: multi
+    text: Which tools do you use?
+    options:
+      - { id: drill, text: Drill }
+      - { id: screwdriver, text: Screwdriver }
+  - id: wish
+    type: text
+    text: What one thing would you change?
+    # Optional. Replaces the text_limit of the form for this question.
+    text_limit: 500
+  - id: comment
+    type: text
+    text: Anything else?
