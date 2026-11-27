@@ -116,7 +116,12 @@ tasks:
       - task: test
 
   test:
-    desc: Run the tests
+    desc: Run the fast tests (skip the tests that check testing.Short)
+    cmds:
+      - go test {{.CLI_ARGS}} -short -race -timeout 10m -shuffle=on ./...
+
+  test:all:
+    desc: Run all tests, also the slow ones. Run it before a pull request
     cmds:
       - go test {{.CLI_ARGS}} -race -timeout 10m -shuffle=on ./...
 

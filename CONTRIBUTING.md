@@ -25,7 +25,7 @@ Report the problem with [GitHub private vulnerability reporting](https://github.
 
 1. Fork the project on GitHub.
 2. Do your work in a branch of your fork.
-3. Run `go-task check`. It formats the code, runs the linters, and runs the tests.
+3. Run `go-task check`. It formats the code, runs the linters, and runs the fast tests. Then run `go-task test:all`, which also runs the slow tests.
 4. Push the branch to your fork.
 5. Open a pull request against <https://github.com/AtomicFS/weathercock-survey>.
 

@@ -29,7 +29,7 @@ Rules for code, tests, dependencies, documentation, and commits. `PRINCIPLES.md`
 - Do test the data that a page or an error shows or must not show, for example a count or the absence of a user ID.
 - Fewer, stronger tests. Each test must be able to fail for a real reason.
 - Table-driven tests with `t.Run`, rows grouped below `// Pass` and `// Fail`. `testify` for assertions, `go-cmp` for structs.
-- Isolate with `t.TempDir()` and `t.Setenv()`. Use a real SQLite database, not a mock. Guard slow tests with `testing.Short()`.
+- Isolate with `t.TempDir()` and `t.Setenv()`. Use a real SQLite database, not a mock. Guard slow tests with `testing.Short()`: `go-task check` skips them, `go-task test:all` runs them.
 
 ## Dependencies
 
