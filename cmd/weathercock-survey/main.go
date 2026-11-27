@@ -15,8 +15,8 @@ import (
 
 	"github.com/AtomicFS/weathercock-survey/internal/config"
 	"github.com/AtomicFS/weathercock-survey/internal/logging"
+	"github.com/AtomicFS/weathercock-survey/internal/suggest"
 	"github.com/AtomicFS/weathercock-survey/internal/timezone"
-	"github.com/AtomicFS/weathercock-survey/internal/yamlfile"
 )
 
 // sourceURL is the URL of the source code of the running version.
@@ -32,7 +32,7 @@ const license = "AGPL-3.0-or-later"
 const exitRefuse = 2
 
 var (
-	errDevRequired = errors.New("version 0 runs only in development mode: use \"serve --dev\"")
+	errDevRequired = errors.New("version 0 runs only in development mode")
 	errEmptyConfig = errors.New("--config: the path is empty")
 )
 
@@ -42,14 +42,14 @@ type cli struct {
 
 // configOption is the option --config. Each command that reads the configuration embeds it.
 type configOption struct {
-	// Config is a plain string, not the kong type "path": errors MUST show the path as the admin typed it.
+	// Config is a plain string, not the kong type "path": errors show the path as the admin typed it.
 	Config string `help:"Path of the configuration file." default:"/etc/weathercock-survey/config.yaml"`
 }
 
-// load reads and checks the configuration file. Each error is fit to print.
-func (o configOption) load() (*config.Config, yamlfile.Lines, error) {
+// load reads and checks the configuration file.
+func (o configOption) load() (*config.Config, error) {
 	if o.Config == "" {
-		return nil, yamlfile.Lines{}, errEmptyConfig
+		return nil, suggest.Wrap(errEmptyConfig, "give the path of the configuration file")
 	}
 	return config.Load(o.Config)
 }
@@ -64,21 +64,20 @@ type serveCmd struct {
 // is not loaded yet.
 func (c *serveCmd) Run(logger *slog.Logger) error {
 	if !c.Dev {
-		return errDevRequired
+		return suggest.Wrap(errDevRequired, `use "serve --dev"`)
 	}
 	for _, warning := range timezone.EnvWarnings(os.Getenv) {
 		logger.Warn(warning.Message, slog.String("suggestion", warning.Suggestion))
 	}
-	cfg, lines, err := c.load()
-	if err != nil {
-		return err
+	_, err := c.load()
+	return err
+}
+
+// logErrors writes one log line for each problem in err, with its suggestion.
+func logErrors(logger *slog.Logger, err error) {
+	for _, problem := range suggest.Problems(err) {
+		logger.Error("command failed", slog.String("error", problem.Error()), slog.String("suggestion", suggest.Of(problem)))
 	}
-	// No database stores a time zone yet, so each start is a first start.
-	names := timezone.ReadNames(timezone.Options{ZoneInfo: os.Getenv("ZONEINFO"), Places: timezone.DefaultPlaces()})
-	if _, err := timezone.CheckNewName(cfg.TimeZone, names, time.LoadLocation); err != nil {
-		return lines.Error("time_zone", err.Error())
-	}
-	return nil
 }
 
 // printHelp prints the help of kong, and a footer with the source code URL and the license.
@@ -135,7 +134,7 @@ func run(args []string, stdout, stderr io.Writer) (code int) {
 	}
 	logger := slog.New(logging.NewHandler(stderr, time.UTC))
 	if err := ctx.Run(logger); err != nil {
-		parser.Errorf("%s", err)
+		logErrors(logger, err)
 		return exitRefuse
 	}
 	return 0

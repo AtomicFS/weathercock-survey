@@ -17,7 +17,8 @@ Rules for code, tests, dependencies, documentation, and commits. `PRINCIPLES.md`
 
 - Return errors with context: `fmt.Errorf("...: %w", err)`. Use sentinel errors for conditions that callers check.
 - Use `log/slog`. Give each warning and error log line a `suggestion` attribute with the fix.
-- For a state that only a bug can cause, use the suggestion `bug.Suggestion`.
+- Attach the fix to an error with `suggest.Wrap`. Join all problems of one check with `errors.Join`. `main` logs one line for each problem.
+- For a state that only a bug can cause, use the suggestion `suggest.Bug`.
 - Never log the data that `PRINCIPLES.md` forbids. Wrap such values in types whose `LogValue()` returns `[redacted]`.
 
 ## Tests
