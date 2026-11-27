@@ -34,7 +34,7 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - 360-degree feedback lives in `IDEA_INCUBATOR.md`, not `WISHLIST.md`: it can harm people and needs a harm review before any build.
 - Templates: `html/template`, not `templ`. About four pages and no JavaScript: no code generator and 14 fewer indirect modules outweigh compile-time types. Tests of each page state make up for the weak typing.
 - Periods (`internal/period`): `Unit` is a `uint8` enum with an invalid zero value and only `String` and `UnmarshalText`; `Cycle` has unexported fields and only `New` makes one; the anchor must be the start of a unit, and the error suggests the unit start before and the one after; `every` is 1..100; no period before the anchor; `period` does not import YAML, so the form loader calls `period.New`.
-- Fast and slow tests: `go-task check` runs `go test -short`; `go-task test:all` runs all tests. The maintainer wants fast checks by default and the slow tests only now and then.
+- Fast and slow tests: `go-task check` runs `go test -short`; `go-task test:all` runs all tests. The maintainer keeps the split, because slow tests will come. The agent runs both before each commit (`AGENTS.md` step 2).
 - Where it is cheap, test against a plain definition over all inputs (for example `TestAllZones`: each zone change of each host zone), not only picked cases. Keep such tests short.
 - No ADRs and no long specification. `PRINCIPLES.md`, `WISHLIST.md`, and this file replace them. The mdBook setup stays for future documentation.
 
@@ -43,7 +43,7 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - Snapshot task: `form.Int` has no marshaler, and a loaded `Form` holds `_no_answer`, which `check` refuses. Store the raw form file bytes in the snapshot and split `form.Load` into a `Parse(data, name)`, so a snapshot loads through the same checks.
 - Planned ends at start run before the config is read, so the database path must not come from the config file.
 - Storage task: period names are unique in one cycle, but not after a change of the cycle (`every: 1` to `3` makes "2027-05" mean May, then May to July). Do not key stored periods by name alone; use the snapshot's start and end too.
-- No CI exists yet, so the slow tests (`TestAllZones`, `TestNoTZData`) run only by hand with `go-task test:all`. When CI comes, it must run `test:all`.
+- When CI comes, it must run `go-task test:all`, not only `go-task check`.
 - Submission task: the `http.MaxBytesReader` cap must come from the form's text limits (form encoding can send about 12 bytes per character), not a fixed constant, or a valid long answer gets cut and cannot be refilled.
 
 ## State

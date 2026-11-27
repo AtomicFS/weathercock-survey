@@ -8,7 +8,7 @@ The global agent instructions apply: your role, finish before you switch, memory
 ## Workflow
 
 1. Propose the next task from `TODO.md` in at most five lines: what, how, and what you will not do. Wait for "go".
-2. Build it. Write a test first where a test is worth it. Run `go-task check`.
+2. Build it. Write a test first where a test is worth it. Run `go-task check`, then `go-task test:all`.
 3. Ask the `reviewer` subagent for the adversarial review. Give it the diff and `PRINCIPLES.md`, and tell it to check that the change keeps the anonymity rules.
 4. Fix the findings that you agree with. Argue back on the others, in one line each.
 5. Update `LLM_MEMORY.md`, and commit. Propose changes to `TODO.md` in the report.
