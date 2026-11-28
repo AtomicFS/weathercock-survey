@@ -60,4 +60,5 @@ Facts for the next session:
 - `time.Date` in a gap or at a doubled midnight picks the earlier zone west of UTC and the later zone east of UTC. Test both sides: Havana/Santiago and Beirut 2025-03-30/Amman 2021-10-29.
 - Go `ZoneBounds` after the last change in the tzdata (rule years): away from a change it gives the year as bounds, and on 31 December of a leap year it returns `t` itself as the end (`time/zoneinfo.go` `tzset`). A loop over zones must step past it.
 - `-race` makes the all-zones test about 7 times slower; `t.Parallel` per zone brings it back to about 3 s.
+- Commit trailers: put both AI trailers in one `-m`, with a newline between them, and use `-s`: `git commit -s -m "<subject>" -m "<body>" -m "AI-Generated: true` newline `AI-Model: <model>"`. Then `Signed-off-by` comes last in the same block. One `-m` per trailer puts a blank line between them, and git does not read `AI-Generated` as a trailer (this broke the commits from `e6319b9` to `119f630`; they stay as they are). `--trailer` with `-s` puts `Signed-off-by` first, which is also wrong.
 - `serve --dev` returns at once until the HTTP server exists; then `TestRun` must change.
