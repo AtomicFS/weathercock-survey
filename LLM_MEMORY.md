@@ -51,6 +51,11 @@ The agent owns this file. See the global agent instructions, section "Memory".
 
 Facts for the next session:
 
+- Next work, agreed with the maintainer on 2026-11-28: the "Form lifecycle" and "Storage" tasks in `TODO.md` depend on each other. Do them in three steps:
+  1. Form file: `id`, `unit`, `every`, `anchor`, and `end` (period boundary or `asap`), with the checks that need only the file. No database.
+  2. Storage: the tables, with the `forms` row (frozen cycle, time zone, accepted `end`, the date `asap` resolved to, ended state).
+  3. Lifecycle at start: compare the file with the `forms` row, refuse forbidden changes with the old values, and open a period only if it fits before the end.
+
 - go-task 3.54.0: `env -u GOFLAGS` removes a shell `GOFLAGS`; an empty `GOFLAGS=` does not. `GOENV=off` wins over a shell `GOENV`.
 - A change of the git `origin` URL alone does not rebuild: run `go-task build --force`.
 - `build:css-update` needs the network; `docs:build-and-watch` does not stop.
