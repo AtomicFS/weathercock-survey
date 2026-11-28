@@ -6,6 +6,7 @@ The maintainer owns this file. Agents propose changes in their reports.
 
 ## Next: the prototype (must have, see `WISHLIST.md`)
 
+- [ ] Form lifecycle: form `id`; at the first period, store the cycle and the time zone of the form; refuse to start if they change, and name the old values; optional `end`: a period boundary (suggest the boundary before and after) or `asap`; a new period opens only if it fits fully before the end, else the form ends for good; refuse an end in the past or inside the open period, and any change after the form ended; check `end` only when it differs from the stored value
 - [ ] Storage: SQLite with choice counters and text answers; no link to the person, no link between answers, no time, no insert order; create all choice counters at 0 when a period opens, so that a new row cannot show a choice; `WITHOUT ROWID` tables with random keys from `crypto/rand`; test: two orders of the same submissions give the same rows, without the random keys; `UNIQUE(user, period)` on the record of who submitted; the record and the counters change in one transaction (`BEGIN IMMEDIATE`) that checks inside that the period is still open; triggers refuse `INSERT` and `UPDATE` in a closed period, and refuse a change from closed to open
 - [ ] Database file: `umask 077` at start; if the file permissions are wider than 0600, fix them and log a warning
 - [ ] Period snapshot: copy the period settings and the form into the database when a period opens; config changes apply only to later periods
