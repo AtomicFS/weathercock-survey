@@ -36,13 +36,14 @@ The agent owns this file. See the global agent instructions, section "Memory".
 - Periods (`internal/period`): `Unit` is a `uint8` enum with an invalid zero value and only `String` and `UnmarshalText`; `Cycle` has unexported fields and only `New` makes one; the anchor must be the start of a unit, and the error suggests the unit start before and the one after; `every` is 1..100; no period before the anchor; `period` does not import YAML, so the form loader calls `period.New`.
 - Fast and slow tests: `go-task check` runs `go test -short`; `go-task test:all` runs all tests. The maintainer keeps the split, because slow tests will come. The agent runs both before each commit (`AGENTS.md` step 2).
 - Where it is cheap, test against a plain definition over all inputs (for example `TestAllZones`: each zone change of each host zone), not only picked cases. Keep such tests short.
+- Form lifecycle (decided 2026-11-28): a form's `unit`, `every`, `anchor`, and time zone are frozen once its first period opens; to change them, the admin uses a new form ID. The server stores them in a `forms` row and refuses to start on a change, and the error names the old values. So periods of a form never overlap, and periods are keyed by `(form_id, name)`.
+- Form `end` (optional): a period boundary (the error suggests the boundary before and after) or `asap` (the planned end of the open period; before the anchor, the form ends without running). A new period opens only if it fits fully before the end; else the form ends for good. Refuse an end in the past or inside the open period, and any change after the form ended. Check `end` only when it differs from the stored value, because a valid date becomes past while it stays in the file. Store the accepted value and the date that `asap` resolved to, so errors can name them.
 - No ADRs and no long specification. `PRINCIPLES.md`, `WISHLIST.md`, and this file replace them. The mdBook setup stays for future documentation.
 
 ## Parked
 
 - Snapshot task: `form.Int` has no marshaler, and a loaded `Form` holds `_no_answer`, which `check` refuses. Store the raw form file bytes in the snapshot and split `form.Load` into a `Parse(data, name)`, so a snapshot loads through the same checks.
 - Planned ends at start run before the config is read, so the database path must not come from the config file.
-- Storage task: period names are unique in one cycle, but not after a change of the cycle (`every: 1` to `3` makes "2027-05" mean May, then May to July). Do not key stored periods by name alone; use the snapshot's start and end too.
 - When CI comes, it must run `go-task test:all`, not only `go-task check`.
 - Submission task: the `http.MaxBytesReader` cap must come from the form's text limits (form encoding can send about 12 bytes per character), not a fixed constant, or a valid long answer gets cut and cannot be refilled.
 
